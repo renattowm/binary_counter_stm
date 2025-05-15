@@ -1,0 +1,393 @@
+ARM GAS  /tmp/ccyW8jwp.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.arch armv7-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"button.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "Core/Src/button.c"
+  18              		.section	.text.button,"ax",%progbits
+  19              		.align	1
+  20              		.global	button
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	button:
+  26              	.LFB65:
+   1:Core/Src/button.c **** /* Includes ------------------------------------------------------------------*/
+   2:Core/Src/button.c **** #include "button.h"
+   3:Core/Src/button.c **** 
+   4:Core/Src/button.c **** /**
+   5:Core/Src/button.c ****  * @brief Button debounce.
+   6:Core/Src/button.c ****  *
+   7:Core/Src/button.c ****  * Function eliminates the influence of contact flickering upon pressing a button (debouncing). 
+   8:Core/Src/button.c ****  * Usage:
+   9:Core/Src/button.c ****  * @code
+  10:Core/Src/button.c ****  * uint8_t oldstate;  // Old state flag
+  11:Core/Src/button.c ****  * void main() {
+  12:Core/Src/button.c ****  *	  
+  13:Core/Src/button.c ****  *
+  14:Core/Src/button.c ****  *  do {
+  15:Core/Src/button.c ****  *    if(Button(GPIOB, GPIO_PIN_3, 1, 0)) { // Detect logical one
+  16:Core/Src/button.c ****  *      oldstate = 1;                              // Update flag
+  17:Core/Src/button.c ****  *    }
+  18:Core/Src/button.c ****  *    if (oldstate && !Button(GPIOB, GPIO_PIN_4, 0)) {   // Detect one-to-zero transition
+  19:Core/Src/button.c ****  *      //"PB4 was pressed";
+  20:Core/Src/button.c ****  *      oldstate = 0;                              // Update flag
+  21:Core/Src/button.c ****  *    }
+  22:Core/Src/button.c ****  *  } while(1);                                    // Endless loop
+  23:Core/Src/button.c ****  * }
+  24:Core/Src/button.c ****  * @endcode
+  25:Core/Src/button.c ****  * @param ui32Port GPIO where button is connected, using the macro from ST (GPIOX)
+  26:Core/Src/button.c ****  * @param ui32Pin  Pin number on designated port from the gpio.h pin definitions (GPIO\_PIN\_X) 
+  27:Core/Src/button.c ****  * @param active_state can be either 0 or 1, and it determines if the button is active upon logical
+  28:Core/Src/button.c ****  * @return 255 if the pin was in the active state for given period, 0 otherwise
+  29:Core/Src/button.c ****  */
+  30:Core/Src/button.c **** uint16_t button(GPIO_TypeDef* ui32Port, uint16_t ui16Pin, uint16_t active_state)
+  31:Core/Src/button.c **** {
+  27              		.loc 1 31 1
+ARM GAS  /tmp/ccyW8jwp.s 			page 2
+
+
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 24
+  30              		@ frame_needed = 1, uses_anonymous_args = 0
+  31 0000 80B5     		push	{r7, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 7, -8
+  35              		.cfi_offset 14, -4
+  36 0002 86B0     		sub	sp, sp, #24
+  37              	.LCFI1:
+  38              		.cfi_def_cfa_offset 32
+  39 0004 00AF     		add	r7, sp, #0
+  40              	.LCFI2:
+  41              		.cfi_def_cfa_register 7
+  42 0006 7860     		str	r0, [r7, #4]
+  43 0008 0B46     		mov	r3, r1
+  44 000a 7B80     		strh	r3, [r7, #2]	@ movhi
+  45 000c 1346     		mov	r3, r2	@ movhi
+  46 000e 3B80     		strh	r3, [r7]	@ movhi
+  32:Core/Src/button.c ****     //lê o botão 'tries' vezes durante 'time' milissegundos
+  33:Core/Src/button.c ****     //o botão deve passar pelo menos a metade final do período em active_state
+  34:Core/Src/button.c ****     uint32_t i,tries = 5;
+  47              		.loc 1 34 16
+  48 0010 0523     		movs	r3, #5
+  49 0012 FB60     		str	r3, [r7, #12]
+  35:Core/Src/button.c ****     uint8_t pressed = 0, unpressed = 0;
+  50              		.loc 1 35 13
+  51 0014 0023     		movs	r3, #0
+  52 0016 FB74     		strb	r3, [r7, #19]
+  53              		.loc 1 35 26
+  54 0018 0023     		movs	r3, #0
+  55 001a BB74     		strb	r3, [r7, #18]
+  36:Core/Src/button.c ****     uint16_t ret = 0;
+  56              		.loc 1 36 14
+  57 001c 0023     		movs	r3, #0
+  58 001e 3B82     		strh	r3, [r7, #16]	@ movhi
+  37:Core/Src/button.c ****     
+  38:Core/Src/button.c ****     
+  39:Core/Src/button.c ****     for(i=0;i<tries;i++)
+  59              		.loc 1 39 10
+  60 0020 0023     		movs	r3, #0
+  61 0022 7B61     		str	r3, [r7, #20]
+  62              		.loc 1 39 5
+  63 0024 18E0     		b	.L2
+  64              	.L5:
+  40:Core/Src/button.c ****     {
+  41:Core/Src/button.c ****         
+  42:Core/Src/button.c ****         if(HAL_GPIO_ReadPin(ui32Port,ui16Pin))
+  65              		.loc 1 42 12
+  66 0026 7B88     		ldrh	r3, [r7, #2]
+  67 0028 1946     		mov	r1, r3
+  68 002a 7868     		ldr	r0, [r7, #4]
+  69 002c FFF7FEFF 		bl	HAL_GPIO_ReadPin
+  70 0030 0346     		mov	r3, r0
+  71              		.loc 1 42 11
+  72 0032 002B     		cmp	r3, #0
+  73 0034 05D0     		beq	.L3
+ARM GAS  /tmp/ccyW8jwp.s 			page 3
+
+
+  43:Core/Src/button.c ****         {
+  44:Core/Src/button.c ****             pressed++;
+  74              		.loc 1 44 20
+  75 0036 FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+  76 0038 0133     		adds	r3, r3, #1
+  77 003a FB74     		strb	r3, [r7, #19]
+  45:Core/Src/button.c ****             unpressed=0;
+  78              		.loc 1 45 22
+  79 003c 0023     		movs	r3, #0
+  80 003e BB74     		strb	r3, [r7, #18]
+  81 0040 04E0     		b	.L4
+  82              	.L3:
+  46:Core/Src/button.c ****         }
+  47:Core/Src/button.c ****         else
+  48:Core/Src/button.c ****         {
+  49:Core/Src/button.c ****             unpressed++;
+  83              		.loc 1 49 22
+  84 0042 BB7C     		ldrb	r3, [r7, #18]	@ zero_extendqisi2
+  85 0044 0133     		adds	r3, r3, #1
+  86 0046 BB74     		strb	r3, [r7, #18]
+  50:Core/Src/button.c ****             pressed = 0;
+  87              		.loc 1 50 21
+  88 0048 0023     		movs	r3, #0
+  89 004a FB74     		strb	r3, [r7, #19]
+  90              	.L4:
+  51:Core/Src/button.c ****         }
+  52:Core/Src/button.c ****         HAL_Delay(1);
+  91              		.loc 1 52 9 discriminator 2
+  92 004c 0120     		movs	r0, #1
+  93 004e FFF7FEFF 		bl	HAL_Delay
+  39:Core/Src/button.c ****     {
+  94              		.loc 1 39 22 discriminator 2
+  95 0052 7B69     		ldr	r3, [r7, #20]
+  96 0054 0133     		adds	r3, r3, #1
+  97 0056 7B61     		str	r3, [r7, #20]
+  98              	.L2:
+  39:Core/Src/button.c ****     {
+  99              		.loc 1 39 14 discriminator 1
+ 100 0058 7A69     		ldr	r2, [r7, #20]
+ 101 005a FB68     		ldr	r3, [r7, #12]
+ 102 005c 9A42     		cmp	r2, r3
+ 103 005e E2D3     		bcc	.L5
+  53:Core/Src/button.c ****     }
+  54:Core/Src/button.c ****     if(active_state)
+ 104              		.loc 1 54 7
+ 105 0060 3B88     		ldrh	r3, [r7]
+ 106 0062 002B     		cmp	r3, #0
+ 107 0064 07D0     		beq	.L6
+  55:Core/Src/button.c ****     {
+  56:Core/Src/button.c ****         if (pressed>(tries/2))
+ 108              		.loc 1 56 20
+ 109 0066 FA7C     		ldrb	r2, [r7, #19]	@ zero_extendqisi2
+ 110              		.loc 1 56 27
+ 111 0068 FB68     		ldr	r3, [r7, #12]
+ 112 006a 5B08     		lsrs	r3, r3, #1
+ 113              		.loc 1 56 12
+ 114 006c 9A42     		cmp	r2, r3
+ARM GAS  /tmp/ccyW8jwp.s 			page 4
+
+
+ 115 006e 09D9     		bls	.L7
+  57:Core/Src/button.c ****         {
+  58:Core/Src/button.c ****             ret = 0xFF;
+ 116              		.loc 1 58 17
+ 117 0070 FF23     		movs	r3, #255
+ 118 0072 3B82     		strh	r3, [r7, #16]	@ movhi
+ 119 0074 06E0     		b	.L7
+ 120              	.L6:
+  59:Core/Src/button.c ****         }
+  60:Core/Src/button.c ****     }
+  61:Core/Src/button.c ****     else
+  62:Core/Src/button.c ****     {
+  63:Core/Src/button.c ****         if (unpressed>(tries/2))
+ 121              		.loc 1 63 22
+ 122 0076 BA7C     		ldrb	r2, [r7, #18]	@ zero_extendqisi2
+ 123              		.loc 1 63 29
+ 124 0078 FB68     		ldr	r3, [r7, #12]
+ 125 007a 5B08     		lsrs	r3, r3, #1
+ 126              		.loc 1 63 12
+ 127 007c 9A42     		cmp	r2, r3
+ 128 007e 01D9     		bls	.L7
+  64:Core/Src/button.c ****         {
+  65:Core/Src/button.c ****             ret = 0xFF;
+ 129              		.loc 1 65 17
+ 130 0080 FF23     		movs	r3, #255
+ 131 0082 3B82     		strh	r3, [r7, #16]	@ movhi
+ 132              	.L7:
+  66:Core/Src/button.c ****         }
+  67:Core/Src/button.c ****     }    
+  68:Core/Src/button.c ****     return ret;
+ 133              		.loc 1 68 12
+ 134 0084 3B8A     		ldrh	r3, [r7, #16]
+  69:Core/Src/button.c **** }
+ 135              		.loc 1 69 1
+ 136 0086 1846     		mov	r0, r3
+ 137 0088 1837     		adds	r7, r7, #24
+ 138              	.LCFI3:
+ 139              		.cfi_def_cfa_offset 8
+ 140 008a BD46     		mov	sp, r7
+ 141              	.LCFI4:
+ 142              		.cfi_def_cfa_register 13
+ 143              		@ sp needed
+ 144 008c 80BD     		pop	{r7, pc}
+ 145              		.cfi_endproc
+ 146              	.LFE65:
+ 148              		.section	.text.button_release,"ax",%progbits
+ 149              		.align	1
+ 150              		.global	button_release
+ 151              		.syntax unified
+ 152              		.thumb
+ 153              		.thumb_func
+ 155              	button_release:
+ 156              	.LFB66:
+  70:Core/Src/button.c **** 
+  71:Core/Src/button.c **** /* Includes ------------------------------------------------------------------*/
+  72:Core/Src/button.c **** #include "button.h"
+  73:Core/Src/button.c **** 
+ARM GAS  /tmp/ccyW8jwp.s 			page 5
+
+
+  74:Core/Src/button.c **** /**
+  75:Core/Src/button.c ****  * @brief Button debounce and release detect.
+  76:Core/Src/button.c ****  *
+  77:Core/Src/button.c ****  * Function eliminates the influence of contact flickering upon pressing a button (debouncing). 
+  78:Core/Src/button.c ****  * When a button press is detected, the function only returns when the button is released.
+  79:Core/Src/button.c ****  *  
+  80:Core/Src/button.c ****  * Usage:
+  81:Core/Src/button.c ****  * @code
+  82:Core/Src/button.c ****  * uint8_t oldstate;  // Old state flag
+  83:Core/Src/button.c ****  * void main() {
+  84:Core/Src/button.c ****  *	  
+  85:Core/Src/button.c ****  *
+  86:Core/Src/button.c ****  *  do {
+  87:Core/Src/button.c ****  *    if(button_release(GPIOB, GPIO_PIN_3, 1, 0)) { 
+  88:Core/Src/button.c ****  *          //button was pressed and released
+  89:Core/Src/button.c ****  *    }
+  90:Core/Src/button.c ****  *  } while(1);                                    // Endless loop
+  91:Core/Src/button.c ****  * }
+  92:Core/Src/button.c ****  * @endcode
+  93:Core/Src/button.c ****  * @param ui32Port GPIO where button is connected, using the macro from ST (GPIOX)
+  94:Core/Src/button.c ****  * @param ui32Pin  Pin number on designated port from the gpio.h pin definitions (GPIO\_PIN\_X) 
+  95:Core/Src/button.c ****  * @param active_state can be either 0 or 1, and it determines if the button is active upon logical
+  96:Core/Src/button.c ****  * @return 255 if the pin was in the active state for given period and then released, 0 otherwise
+  97:Core/Src/button.c ****  */
+  98:Core/Src/button.c **** uint16_t button_release(GPIO_TypeDef* ui32Port, uint16_t ui16Pin, uint16_t active_state)
+  99:Core/Src/button.c **** {
+ 157              		.loc 1 99 1
+ 158              		.cfi_startproc
+ 159              		@ args = 0, pretend = 0, frame = 8
+ 160              		@ frame_needed = 1, uses_anonymous_args = 0
+ 161 0000 80B5     		push	{r7, lr}
+ 162              	.LCFI5:
+ 163              		.cfi_def_cfa_offset 8
+ 164              		.cfi_offset 7, -8
+ 165              		.cfi_offset 14, -4
+ 166 0002 82B0     		sub	sp, sp, #8
+ 167              	.LCFI6:
+ 168              		.cfi_def_cfa_offset 16
+ 169 0004 00AF     		add	r7, sp, #0
+ 170              	.LCFI7:
+ 171              		.cfi_def_cfa_register 7
+ 172 0006 7860     		str	r0, [r7, #4]
+ 173 0008 0B46     		mov	r3, r1
+ 174 000a 7B80     		strh	r3, [r7, #2]	@ movhi
+ 175 000c 1346     		mov	r3, r2	@ movhi
+ 176 000e 3B80     		strh	r3, [r7]	@ movhi
+ 100:Core/Src/button.c ****     if(button(ui32Port,ui16Pin,active_state))
+ 177              		.loc 1 100 8
+ 178 0010 3A88     		ldrh	r2, [r7]
+ 179 0012 7B88     		ldrh	r3, [r7, #2]
+ 180 0014 1946     		mov	r1, r3
+ 181 0016 7868     		ldr	r0, [r7, #4]
+ 182 0018 FFF7FEFF 		bl	button
+ 183 001c 0346     		mov	r3, r0
+ 184              		.loc 1 100 7
+ 185 001e 002B     		cmp	r3, #0
+ 186 0020 17D0     		beq	.L10
+ARM GAS  /tmp/ccyW8jwp.s 			page 6
+
+
+ 101:Core/Src/button.c ****     {
+ 102:Core/Src/button.c ****         if(active_state)
+ 187              		.loc 1 102 11
+ 188 0022 3B88     		ldrh	r3, [r7]
+ 189 0024 002B     		cmp	r3, #0
+ 190 0026 09D0     		beq	.L16
+ 103:Core/Src/button.c ****         {
+ 104:Core/Src/button.c ****             while (HAL_GPIO_ReadPin(ui32Port, ui16Pin))
+ 191              		.loc 1 104 19
+ 192 0028 00BF     		nop
+ 193              	.L12:
+ 194              		.loc 1 104 20 discriminator 1
+ 195 002a 7B88     		ldrh	r3, [r7, #2]
+ 196 002c 1946     		mov	r1, r3
+ 197 002e 7868     		ldr	r0, [r7, #4]
+ 198 0030 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 199 0034 0346     		mov	r3, r0
+ 200 0036 002B     		cmp	r3, #0
+ 201 0038 F7D1     		bne	.L12
+ 202 003a 08E0     		b	.L13
+ 203              	.L16:
+ 105:Core/Src/button.c ****                 ;
+ 106:Core/Src/button.c ****         }
+ 107:Core/Src/button.c ****         else
+ 108:Core/Src/button.c ****         {
+ 109:Core/Src/button.c ****             while (!HAL_GPIO_ReadPin(ui32Port, ui16Pin))
+ 204              		.loc 1 109 19
+ 205 003c 00BF     		nop
+ 206              	.L14:
+ 207              		.loc 1 109 21 discriminator 1
+ 208 003e 7B88     		ldrh	r3, [r7, #2]
+ 209 0040 1946     		mov	r1, r3
+ 210 0042 7868     		ldr	r0, [r7, #4]
+ 211 0044 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 212 0048 0346     		mov	r3, r0
+ 213              		.loc 1 109 20 discriminator 1
+ 214 004a 002B     		cmp	r3, #0
+ 215 004c F7D0     		beq	.L14
+ 216              	.L13:
+ 110:Core/Src/button.c ****                 ;
+ 111:Core/Src/button.c ****         }
+ 112:Core/Src/button.c ****         return 0xFF;
+ 217              		.loc 1 112 16
+ 218 004e FF23     		movs	r3, #255
+ 219 0050 00E0     		b	.L15
+ 220              	.L10:
+ 113:Core/Src/button.c ****     }
+ 114:Core/Src/button.c ****     else
+ 115:Core/Src/button.c ****     {
+ 116:Core/Src/button.c ****         return 0;
+ 221              		.loc 1 116 16
+ 222 0052 0023     		movs	r3, #0
+ 223              	.L15:
+ 117:Core/Src/button.c ****     }    
+ 118:Core/Src/button.c **** }
+ 224              		.loc 1 118 1
+ 225 0054 1846     		mov	r0, r3
+ARM GAS  /tmp/ccyW8jwp.s 			page 7
+
+
+ 226 0056 0837     		adds	r7, r7, #8
+ 227              	.LCFI8:
+ 228              		.cfi_def_cfa_offset 8
+ 229 0058 BD46     		mov	sp, r7
+ 230              	.LCFI9:
+ 231              		.cfi_def_cfa_register 13
+ 232              		@ sp needed
+ 233 005a 80BD     		pop	{r7, pc}
+ 234              		.cfi_endproc
+ 235              	.LFE66:
+ 237              		.text
+ 238              	.Letext0:
+ 239              		.file 2 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/machine/_defa
+ 240              		.file 3 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h
+ 241              		.file 4 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h"
+ 242              		.file 5 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h"
+ 243              		.file 6 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h"
+ARM GAS  /tmp/ccyW8jwp.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 button.c
+     /tmp/ccyW8jwp.s:19     .text.button:0000000000000000 $t
+     /tmp/ccyW8jwp.s:25     .text.button:0000000000000000 button
+     /tmp/ccyW8jwp.s:149    .text.button_release:0000000000000000 $t
+     /tmp/ccyW8jwp.s:155    .text.button_release:0000000000000000 button_release
+
+UNDEFINED SYMBOLS
+HAL_GPIO_ReadPin
+HAL_Delay
